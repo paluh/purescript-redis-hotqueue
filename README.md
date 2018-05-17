@@ -89,7 +89,7 @@ worker = launchAff $ Redis.withConnection redisConfig $ \conn → do
     o.put (a * 8)
 ```
 
-Now we are ready to start redis server, run worker...
+Now we are ready to start redis server and run worker.
 
 ``` purescript
 main = launchAff $ do
@@ -98,9 +98,15 @@ main = launchAff $ do
 
 ```
 
-... push some data and check the result.
+Our worker script is oneliner:
 
-```
+   ```javascript
+   require( '../output/Test.Integration/index.js' ).work();
+   ```
+
+We can now push some data and check the result.
+
+``` purescript
       Redis.withConnection redisConfig \conn → do
         let
           i = hotqueueJson conn inQueue
@@ -113,4 +119,5 @@ main = launchAff $ do
         for_ args \n → do
           x ← runExceptT $ o.bGet
           assert "Result has been correctly calculated" (x == Right (n * 8))
+```
 
