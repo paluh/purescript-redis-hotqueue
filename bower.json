@@ -1,5 +1,10 @@
 {
   "name": "purescript-redis-hotqueue",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paluh/purescript-redis-hotqueue.git"
+  },
+  "license": "BSD-3-Clause",
   "ignore": [
     "**/.*",
     "node_modules",
