@@ -4,10 +4,9 @@ import Prelude
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Class (class MonadAff, liftAff)
-import Control.Monad.Except (ExceptT, throwError)
+import Control.Monad.Except (ExceptT, except)
 import Control.Monad.Rec.Class (class MonadRec, forever)
 import Data.ByteString (ByteString, fromUTF8, toUTF8)
-import Data.Either (Either(..))
 import Data.Foreign (MultipleErrors)
 import Data.Maybe (Maybe)
 import Data.NonEmpty (singleton)
@@ -80,9 +79,5 @@ hotqueueJson
   ⇒ Connection
   → Key
   → Hotqueue (JsonMonad eff) a
-hotqueueJson conn key = hotqueue conn key { ser: writeJSON, prs }
-  where
-  prs s = do
-    case readJSON s of
-      Left e → throwError e
-      Right a → pure a
+hotqueueJson conn key =
+  hotqueue conn key { ser: writeJSON, prs: except <<< readJSON }
