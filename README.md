@@ -1,6 +1,6 @@
 # purescript-redis-hotqueue
 
-Really simple message queue based on Redis and inspired by [Python's hotqueue](https://github.com/richardhenry/hotqueue).
+Really simple message queue based on Redis and inspired by [Python hotqueue](https://github.com/richardhenry/hotqueue).
 
 ## Queue type
 
@@ -89,18 +89,28 @@ worker = launchAff $ Redis.withConnection redisConfig $ \conn → do
     o.put (a * 8)
 ```
 
+Now we are ready to start redis server, run worker...
 
-```
+``` purescript
 main = launchAff $ do
   withSpawn "redis-server" ["--port", show redisPort] ChildProcess.defaultSpawnOptions $ const $
     withFork "./test/worker.js" [] $ const $
+
+```
+
+... push some data and check the result.
+
+```
       Redis.withConnection redisConfig \conn → do
         let
           i = hotqueueJson conn inQueue
           (o ∷ HotqueueJson _ Int) = hotqueueJson conn outQueue
           args = [1,2,3,4,5,6]
+
         for_ args \n → do
           void $ runExceptT $ i.put n
+
         for_ args \n → do
           x ← runExceptT $ o.bGet
           assert "Result has been correctly calculated" (x == Right (n * 8))
+

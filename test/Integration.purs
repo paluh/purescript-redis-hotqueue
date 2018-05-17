@@ -43,13 +43,19 @@ worker = launchAff $ Redis.withConnection redisConfig $ \conn → do
 main = launchAff $ do
   withSpawn "redis-server" ["--port", show redisPort] ChildProcess.defaultSpawnOptions $ const $
     withFork "./test/worker.js" [] $ const $
+
+
+
       Redis.withConnection redisConfig \conn → do
         let
           i = hotqueueJson conn inQueue
           (o ∷ HotqueueJson _ Int) = hotqueueJson conn outQueue
           args = [1,2,3,4,5,6]
+
         for_ args \n → do
           void $ runExceptT $ i.put n
+
         for_ args \n → do
           x ← runExceptT $ o.bGet
           assert "Result has been correctly calculated" (x == Right (n * 8))
+
