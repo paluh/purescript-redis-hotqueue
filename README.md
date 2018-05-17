@@ -89,7 +89,7 @@ worker = launchAff $ Redis.withConnection redisConfig $ \conn → do
     o.put (a * 8)
 ```
 
-Now we are ready to start redis server and run worker.
+Now we are ready to start redis server and run the worker.
 
 ``` purescript
 main = launchAff $ do
