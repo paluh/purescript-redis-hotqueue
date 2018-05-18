@@ -74,7 +74,7 @@ worker = launchAff $ Redis.withConnection redisConfig $ \conn → do
     o = hotqueueJson conn outQueue
   void $ workLoop i \a → do
     case a of
-      Right a → o.put (a * 8)
+      Right a' → o.put (a' * 8)
       Left _ → pure unit
 ```
 
@@ -96,7 +96,7 @@ multiplyTest =
       assert "Result has been correctly calculated" (x == Right (n * 8))
 ```
 
-Helpers which spawn Redis server and worker processes and cleanup them afterwards. Worker is just `node` run against one-liner which runs our function.
+Helpers which spawn Redis server and worker processes and cleanup them afterwards. Worker is just a `node` process run against one-liner which executes our function.
 
 ```purescript
 withChild cmd args f = bracket spawn kill f
