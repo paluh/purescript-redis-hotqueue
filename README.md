@@ -8,34 +8,35 @@ Hotqueue provides this simple API:
 
    ``` purescript
    type Hotqueue m a =
-     { bGet ∷ m a
+     { bGet ∷ m (Either e a)
      , clear ∷ m Unit
-     , get ∷ m (Maybe a)
+     , get ∷ m (Maybe (Either e a))
      , key ∷ String
      , put ∷ a → m Unit
      , snapshot ∷ m (Array a)
      }
    ```
 
+where `bGet` is a blocking get and `get` is non blocking.
+
 Its `Redis` based implementation for data which are `JSON` serializable has this constructor:
 
    ``` purescript
    hotqueueJson
-     ∷ ∀ a eff
-     . WriteForeign a
+     ∷ ∀ a eff m
+     . MonadAff (redis ∷ REDIS | eff) m
+     ⇒ WriteForeign a
      ⇒ ReadForeign a
-     ⇒ Redis.Connection
+     ⇒ Connection
      → Key
-     → Hotqueue
-         (ExceptT MultipleErrors (Aff (redis  ∷ REDIS | eff)))
-         a
+     → Hotqueue m MultipleErrors a
    ```
 
 ## Example
 
-Caution! This guide is literate Purescript which is turned into testing module so it is complete and a little verbose.
+This guide is a literate Purescript file which is compiled into testing module so it is a little verbose.
 
-So let's start with boring stuff: imports + test helpers.
+Let's start with boring stuff - imports.
 
 ``` purescript
 module Test.Integration where
@@ -44,26 +45,13 @@ import Prelude
 
 import Control.Monad.Aff (bracket, launchAff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Except (runExceptT)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Posix.Signal (Signal(..))
 import Database.Redis as Redis
-import Database.Redis.Hotqueue (Hotqueue, HotqueueJson, hotqueueJson, workLoop)
+import Database.Redis.Hotqueue (Hotqueue, hotqueueJson, workLoop)
 import Node.ChildProcess as ChildProcess
 import Test.Unit.Assert (assert)
-
-withChild spawn f = bracket spawn kill f
-  where
-  kill = void <<< liftEff <<< ChildProcess.kill SIGABRT
-
-withSpawn cmd args opts = withChild spawn
-  where
-  spawn = liftEff $ ChildProcess.spawn cmd args opts
-
-withFork cmd args = withChild spawn
-  where
-  spawn = liftEff $ ChildProcess.fork cmd args
 ```
 
 Now let's define our testing environment.
@@ -77,47 +65,70 @@ outQueue = "test:output"
 
 Finally we are ready to define our worker. It fetches `Int`s from input queue, multiplies them by `8` and pushes the result to the output queue.
 
-Sometimes you have to help and provide type annotation for message type (`i ∷ Hotqueue _ Int` in this example)...
-
+Sometimes you have to help compiler and provide type annotation for message type (`i ∷ Hotqueue _ _ Int` in this example).
 
 ``` purescript
 worker = launchAff $ Redis.withConnection redisConfig $ \conn → do
   let
-    (i ∷ Hotqueue _ Int) = hotqueueJson conn inQueue
+    (i ∷ Hotqueue _ _ Int) = hotqueueJson conn inQueue
     o = hotqueueJson conn outQueue
-  void $ runExceptT $ workLoop i \a → do
-    o.put (a * 8)
+  void $ workLoop i \a → do
+    case a of
+      Right a → o.put (a * 8)
+      Left _ → pure unit
 ```
 
-Now we are ready to start redis server and run the worker.
+Here is our test which verifies if worker done his job.
+
+```purescript
+multiplyTest =
+  Redis.withConnection redisConfig \conn → do
+    let
+      i = hotqueueJson conn inQueue
+      (o ∷ Hotqueue _ _ Int) = hotqueueJson conn outQueue
+      args = [1,2,3,4,5,6]
+
+    for_ args \n → do
+      void $ i.put n
+
+    for_ args \n → do
+      x ← o.bGet
+      assert "Result has been correctly calculated" (x == Right (n * 8))
+```
+
+Helpers which spawn Redis server and worker processes and cleanup them afterwards. Worker is just `node` run against one-liner which runs our function.
+
+```purescript
+withChild cmd args f = bracket spawn kill f
+  where
+  spawn = liftEff $ ChildProcess.spawn cmd args ChildProcess.defaultSpawnOptions
+  kill = void <<< liftEff <<< ChildProcess.kill SIGABRT
+
+withWorker f =
+  withChild "node" ["-e", "require('./output/Test.Integration/index.js').worker()"] (const f)
+
+withRedis f =
+  withChild "redis-server" ["--port", show redisPort] (const f)
+```
+
+Now we are ready to start Redis server, run the worker and run testing scenario.
 
 ``` purescript
 main = launchAff $ do
-  withSpawn "redis-server" ["--port", show redisPort] ChildProcess.defaultSpawnOptions $ const $
-    withFork "./test/worker.js" [] $ const $
-
+  withRedis $
+    withWorker $
+      multiplyTest
 ```
 
-Our worker script is oneliner:
-
-   ```javascript
-   require( '../output/Test.Integration/index.js' ).work();
-   ```
-
-We can now push some data and check the result.
+Let's check if we can reverse the order and start worker first and later run Redis server.
+If this works let's restart Redis server and check if worker still works after that.
 
 ``` purescript
-      Redis.withConnection redisConfig \conn → do
-        let
-          i = hotqueueJson conn inQueue
-          (o ∷ HotqueueJson _ Int) = hotqueueJson conn outQueue
-          args = [1,2,3,4,5,6]
+  withWorker $ do
+    withRedis $
+      multiplyTest
 
-        for_ args \n → do
-          void $ runExceptT $ i.put n
-
-        for_ args \n → do
-          x ← runExceptT $ o.bGet
-          assert "Result has been correctly calculated" (x == Right (n * 8))
+    withRedis $
+      multiplyTest
 ```
 

@@ -4,26 +4,13 @@ import Prelude
 
 import Control.Monad.Aff (bracket, launchAff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Except (runExceptT)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Posix.Signal (Signal(..))
 import Database.Redis as Redis
-import Database.Redis.Hotqueue (Hotqueue, HotqueueJson, hotqueueJson, workLoop)
+import Database.Redis.Hotqueue (Hotqueue, hotqueueJson, workLoop)
 import Node.ChildProcess as ChildProcess
 import Test.Unit.Assert (assert)
-
-withChild spawn f = bracket spawn kill f
-  where
-  kill = void <<< liftEff <<< ChildProcess.kill SIGABRT
-
-withSpawn cmd args opts = withChild spawn
-  where
-  spawn = liftEff $ ChildProcess.spawn cmd args opts
-
-withFork cmd args = withChild spawn
-  where
-  spawn = liftEff $ ChildProcess.fork cmd args
 
 
 redisPort = 43218
@@ -34,28 +21,51 @@ outQueue = "test:output"
 
 worker = launchAff $ Redis.withConnection redisConfig $ \conn → do
   let
-    (i ∷ Hotqueue _ Int) = hotqueueJson conn inQueue
+    (i ∷ Hotqueue _ _ Int) = hotqueueJson conn inQueue
     o = hotqueueJson conn outQueue
-  void $ runExceptT $ workLoop i \a → do
-    o.put (a * 8)
+  void $ workLoop i \a → do
+    case a of
+      Right a → o.put (a * 8)
+      Left _ → pure unit
+
+
+multiplyTest =
+  Redis.withConnection redisConfig \conn → do
+    let
+      i = hotqueueJson conn inQueue
+      (o ∷ Hotqueue _ _ Int) = hotqueueJson conn outQueue
+      args = [1,2,3,4,5,6]
+
+    for_ args \n → do
+      void $ i.put n
+
+    for_ args \n → do
+      x ← o.bGet
+      assert "Result has been correctly calculated" (x == Right (n * 8))
+
+
+withChild cmd args f = bracket spawn kill f
+  where
+  spawn = liftEff $ ChildProcess.spawn cmd args ChildProcess.defaultSpawnOptions
+  kill = void <<< liftEff <<< ChildProcess.kill SIGABRT
+
+withWorker f =
+  withChild "node" ["-e", "require('./output/Test.Integration/index.js').worker()"] (const f)
+
+withRedis f =
+  withChild "redis-server" ["--port", show redisPort] (const f)
 
 
 main = launchAff $ do
-  withSpawn "redis-server" ["--port", show redisPort] ChildProcess.defaultSpawnOptions $ const $
-    withFork "./test/worker.js" [] $ const $
+  withRedis $
+    withWorker $
+      multiplyTest
 
 
+  withWorker $ do
+    withRedis $
+      multiplyTest
 
-      Redis.withConnection redisConfig \conn → do
-        let
-          i = hotqueueJson conn inQueue
-          (o ∷ HotqueueJson _ Int) = hotqueueJson conn outQueue
-          args = [1,2,3,4,5,6]
-
-        for_ args \n → do
-          void $ runExceptT $ i.put n
-
-        for_ args \n → do
-          x ← runExceptT $ o.bGet
-          assert "Result has been correctly calculated" (x == Right (n * 8))
+    withRedis $
+      multiplyTest
 
