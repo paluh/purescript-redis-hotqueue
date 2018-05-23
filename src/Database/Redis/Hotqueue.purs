@@ -68,6 +68,8 @@ hotqueue conn key {ser, prs} =
   s ∷ ByteString → String
   s = fromUTF8
 
+type HotqueueJson m a = Hotqueue m MultipleErrors a
+
 hotqueueJson
   ∷ ∀ a eff m
   . MonadAff (redis ∷ REDIS | eff) m
