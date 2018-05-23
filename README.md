@@ -7,11 +7,10 @@ Really simple message queue based on Redis and inspired by [Python hotqueue](htt
 Hotqueue provides this simple API:
 
    ``` purescript
-   type Hotqueue m a =
+   type Hotqueue m e a =
      { bGet ∷ m (Either e a)
      , clear ∷ m Unit
      , get ∷ m (Maybe (Either e a))
-     , key ∷ String
      , put ∷ a → m Unit
      , snapshot ∷ m (Array a)
      }
