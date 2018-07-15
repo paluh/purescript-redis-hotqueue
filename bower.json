@@ -12,15 +12,15 @@
     "output"
   ],
   "dependencies": {
-    "purescript-prelude": "^3.3.0",
-    "purescript-console": "^3.0.0",
-    "purescript-redis-client": "^0.4.0",
-    "purescript-simple-json": "^3.0.0"
+    "purescript-prelude": "^4.0.1",
+    "purescript-console": "^4.0.0",
+    "purescript-redis-client": "adamczykm/purescript-redis-client#efddd60c9535c4fd553560ad8edad94d5c9407a9",
+    "purescript-simple-json": "^4.0.0"
   },
   "devDependencies": {
-    "purescript-psci-support": "^3.0.0",
-    "purescript-sunde": "^0.1.0",
-    "purescript-debug": "^3.0.0",
-    "purescript-test-unit": "^13.0.0"
+    "purescript-psci-support": "^4.0.0",
+    "purescript-sunde": "^1.0.0",
+    "purescript-debug": "^4.0.0",
+    "purescript-test-unit": "^14.0.0"
   }
 }
