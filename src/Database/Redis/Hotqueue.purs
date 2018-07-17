@@ -2,15 +2,15 @@ module Database.Redis.Hotqueue where
 
 import Prelude
 
-import Control.Monad.Aff.Class (class MonadAff, liftAff)
+import Effect.Aff.Class (class MonadAff, liftAff)
 import Control.Monad.Rec.Class (class MonadRec, forever)
 import Data.ByteString (ByteString, fromUTF8, toUTF8)
 import Data.Either (Either)
-import Data.Foreign (MultipleErrors)
+import Foreign (MultipleErrors)
 import Data.Maybe (Maybe)
 import Data.NonEmpty (singleton)
 import Data.Traversable (traverse)
-import Database.Redis (Connection, REDIS, blpopIndef, lpop, lrange, ltrim, rpush)
+import Database.Redis (Connection, blpopIndef, lpop, lrange, ltrim, rpush)
 import Simple.JSON (class ReadForeign, class WriteForeign, readJSON, writeJSON)
 
 type Key = String
@@ -45,8 +45,8 @@ workLoop queue work = forever $ do
   work a
 
 hotqueue
-  ∷ ∀ a e eff m
-  . MonadAff (redis ∷ REDIS | eff) m
+  ∷ ∀ a e m
+  . MonadAff m
   ⇒ Connection
   → Key
   → { ser ∷ a → String, prs ∷ String → m (Either e a) }
@@ -71,8 +71,8 @@ hotqueue conn key {ser, prs} =
 type HotqueueJson m a = Hotqueue m MultipleErrors a
 
 hotqueueJson
-  ∷ ∀ a eff m
-  . MonadAff (redis ∷ REDIS | eff) m
+  ∷ ∀ a m
+  . MonadAff m
   ⇒ WriteForeign a
   ⇒ ReadForeign a
   ⇒ Connection

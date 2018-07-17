@@ -23,7 +23,7 @@ Its `Redis` based implementation for data which are `JSON` serializable has this
    ``` purescript
    hotqueueJson
      ∷ ∀ a eff m
-     . MonadAff (redis ∷ REDIS | eff) m
+     . MonadAff m
      ⇒ WriteForeign a
      ⇒ ReadForeign a
      ⇒ Connection
@@ -42,8 +42,8 @@ module Test.Integration where
 
 import Prelude
 
-import Control.Monad.Aff (bracket, launchAff)
-import Control.Monad.Eff.Class (liftEff)
+import Effect.Aff (bracket, launchAff)
+import Effect.Class (liftEffect)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Posix.Signal (Signal(..))
@@ -100,8 +100,8 @@ Helpers which spawn Redis server and worker processes and cleanup them afterward
 ```purescript
 withChild cmd args f = bracket spawn kill f
   where
-  spawn = liftEff $ ChildProcess.spawn cmd args ChildProcess.defaultSpawnOptions
-  kill = void <<< liftEff <<< ChildProcess.kill SIGABRT
+  spawn = liftEffect $ ChildProcess.spawn cmd args ChildProcess.defaultSpawnOptions
+  kill = void <<< liftEffect <<< ChildProcess.kill SIGABRT
 
 withWorker f =
   withChild "node" ["-e", "require('./output/Test.Integration/index.js').worker()"] (const f)
