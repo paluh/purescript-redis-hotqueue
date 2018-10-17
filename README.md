@@ -33,7 +33,7 @@ Its `Redis` based implementation for data which are `JSON` serializable has this
 
 ## Example
 
-This guide is a literate Purescript file which is compiled into testing module so it is a little verbose.
+This guide is a literate Purescript file which is compiled into testing module (using [`literate-purescript`](https://github.com/Thimoteus/literate-purescript) - check `bin/docs.sh`) so it is a little verbose.
 
 Let's start with boring stuff - imports.
 
@@ -131,3 +131,11 @@ If this works let's restart Redis server and check if worker still works after t
       multiplyTest
 ```
 
+
+## Testing
+
+To run above testing scenario please call:
+
+  ```bash
+  $ pulp test --main Test.Integration
+  ```

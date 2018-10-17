@@ -14,7 +14,7 @@
   "dependencies": {
     "purescript-prelude": "^4.0.1",
     "purescript-console": "^4.0.0",
-    "purescript-redis-client": "adamczykm/purescript-redis-client#efddd60c9535c4fd553560ad8edad94d5c9407a9",
+    "purescript-redis-client": "paluh/purescript-redis-client#master",
     "purescript-simple-json": "^4.0.0"
   },
   "devDependencies": {

@@ -2,8 +2,8 @@ module Test.Integration where
 
 import Prelude
 
-import Control.Monad.Aff (bracket, launchAff)
-import Control.Monad.Eff.Class (liftEff)
+import Effect.Aff (bracket, launchAff)
+import Effect.Class (liftEffect)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Posix.Signal (Signal(..))
@@ -25,7 +25,7 @@ worker = launchAff $ Redis.withConnection redisConfig $ \conn → do
     o = hotqueueJson conn outQueue
   void $ workLoop i \a → do
     case a of
-      Right a → o.put (a * 8)
+      Right a' → o.put (a' * 8)
       Left _ → pure unit
 
 
@@ -46,8 +46,8 @@ multiplyTest =
 
 withChild cmd args f = bracket spawn kill f
   where
-  spawn = liftEff $ ChildProcess.spawn cmd args ChildProcess.defaultSpawnOptions
-  kill = void <<< liftEff <<< ChildProcess.kill SIGABRT
+  spawn = liftEffect $ ChildProcess.spawn cmd args ChildProcess.defaultSpawnOptions
+  kill = void <<< liftEffect <<< ChildProcess.kill SIGABRT
 
 withWorker f =
   withChild "node" ["-e", "require('./output/Test.Integration/index.js').worker()"] (const f)
