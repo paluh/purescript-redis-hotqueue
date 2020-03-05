@@ -1,26 +1,28 @@
 {
-  "name": "purescript-redis-hotqueue",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/paluh/purescript-redis-hotqueue.git"
-  },
-  "license": "BSD-3-Clause",
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "output"
-  ],
-  "dependencies": {
-    "purescript-prelude": "^4.0.1",
-    "purescript-console": "^4.0.0",
-    "purescript-redis-client": "paluh/purescript-redis-client#master",
-    "purescript-simple-json": "^4.0.0"
-  },
-  "devDependencies": {
-    "purescript-psci-support": "^4.0.0",
-    "purescript-sunde": "^1.0.0",
-    "purescript-debug": "^4.0.0",
-    "purescript-test-unit": "^14.0.0"
+    "name": "purescript-redis-hotqueue",
+    "license": [
+        "BSD-3-Clause"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/paluh/purescript-redis-hotqueue.git"
+    },
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "output"
+    ],
+    "dependencies": {
+        "purescript-effect": "^v2.0.1",
+        "purescript-prelude": "^v4.1.1",
+        "purescript-redis-client": "^v1.0.1",
+        "purescript-simple-json": "^v7.0.0"
+    },
+    "devDependencies": {
+        "purescript-debug": "^v4.0.0",
+        "purescript-psci-support": "^v4.0.0",
+        "purescript-sunde": "^v2.0.0",
+        "purescript-test-unit": "^14.0.0"
   }
 }
