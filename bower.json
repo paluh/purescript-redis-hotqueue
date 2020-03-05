@@ -23,6 +23,6 @@
         "purescript-debug": "^v4.0.0",
         "purescript-psci-support": "^v4.0.0",
         "purescript-sunde": "^v2.0.0",
-        "purescript-test-unit": "^14.0.0"
+        "purescript-test-unit": "^15.0.0"
   }
 }

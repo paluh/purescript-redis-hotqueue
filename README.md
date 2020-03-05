@@ -114,6 +114,9 @@ Now we are ready to start Redis server, run the worker and run testing scenario.
 
 ``` purescript
 main = launchAff $ do
+  -- | Sanity cleanup of our test db ;-)
+  cleanup
+
   withRedis $
     withWorker $
       multiplyTest
@@ -129,7 +132,23 @@ If this works let's restart Redis server and check if worker still works after t
 
     withRedis $
       multiplyTest
+
+  cleanup
 ```
+
+We have to also provide this minor helper so we can enter and leave our test db in a clean state.
+
+```purescript
+cleanup =
+  withRedis $ do
+    Redis.withConnection redisConfig \conn → do
+      let
+        (i ∷ Hotqueue _ _ Int) = hotqueueJson conn inQueue
+        (o ∷ Hotqueue _ _ Int) = hotqueueJson conn outQueue
+      i.clear
+      o.clear
+```
+
 
 
 ## Testing

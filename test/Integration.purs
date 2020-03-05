@@ -57,6 +57,9 @@ withRedis f =
 
 
 main = launchAff $ do
+  -- | Sanity cleanup of our test db ;-)
+  cleanup
+
   withRedis $
     withWorker $
       multiplyTest
@@ -68,4 +71,16 @@ main = launchAff $ do
 
     withRedis $
       multiplyTest
+
+  cleanup
+
+
+cleanup =
+  withRedis $ do
+    Redis.withConnection redisConfig \conn → do
+      let
+        (i ∷ Hotqueue _ _ Int) = hotqueueJson conn inQueue
+        (o ∷ Hotqueue _ _ Int) = hotqueueJson conn outQueue
+      i.clear
+      o.clear
 
