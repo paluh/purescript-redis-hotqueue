@@ -14,15 +14,21 @@
         "output"
     ],
     "dependencies": {
-        "purescript-effect": "^v2.0.1",
-        "purescript-prelude": "^v4.1.1",
-        "purescript-redis-client": "^v1.0.1",
-        "purescript-simple-json": "^v7.0.0"
-    },
-    "devDependencies": {
-        "purescript-debug": "^v4.0.0",
-        "purescript-psci-support": "^v4.0.0",
-        "purescript-sunde": "^v2.0.0",
-        "purescript-test-unit": "^15.0.0"
-  }
+        "purescript-aff": "^v6.0.0",
+        "purescript-bytestrings": "^v8.0.0",
+        "purescript-effect": "^v3.0.0",
+        "purescript-either": "^v5.0.0",
+        "purescript-foldable-traversable": "^v5.0.1",
+        "purescript-foreign": "^v6.0.1",
+        "purescript-maybe": "^v5.0.0",
+        "purescript-node-child-process": "^v7.1.0",
+        "purescript-nonempty": "^v6.0.0",
+        "purescript-posix-types": "^v5.0.0",
+        "purescript-prelude": "^v5.0.1",
+        "purescript-psci-support": "^v5.0.0",
+        "purescript-redis-client": "https://github.com/paluh/purescript-redis-client.git#8d6c7e6864d8036bdf8588c0b1eb5a9afcec8077",
+        "purescript-simple-json": "^v8.0.0",
+        "purescript-tailrec": "^v5.0.1",
+        "purescript-test-unit": "^v16.0.0"
+    }
 }
